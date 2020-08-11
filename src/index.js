@@ -17,7 +17,7 @@ class App {
 	this.toggleEvents();
 	this.startTimer = this.startTimer.bind(this);
 	this.updateTimer = this.updateTimer.bind(this);
-	this.displayTime = this.displayTime.bind(this);
+	this.displayTime = this.displayTime();
 	}
 
 	getElements() {
@@ -42,7 +42,7 @@ class App {
 	}
 
 	updateTimer(time = moment()) {
-		this.diaplayTime(time);
+		this.displayTime(time);
 	}
 
 	displayTime(time = moment()) {
