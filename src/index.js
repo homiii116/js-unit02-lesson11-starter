@@ -17,7 +17,9 @@ class App {
 	this.toggleEvents();
 	this.startTimer = this.startTimer.bind(this);
 	this.updateTimer = this.updateTimer.bind(this);
-	this.displayTime = this.displayTime();
+	this.displayTime = this.displayTime.bind(this);
+
+	this.displayTime();
 	}
 
 	getElements() {
@@ -33,12 +35,14 @@ class App {
 	startTimer(e = null, time = moment()) {
 		if (e)e.preventDefault();
 		this.startButton.disabled = true;
+		console.log(this.startButton.disabled);
 		this.stopButton.disabled = false;
 		this.isTimerStopped = false;
 		this.startAt = time;
 		const startAtClone = moment(this.startAt);
 		this.endAt = startAtClone.add(this.workLength, 'minutes');
 		this.timerUpdater = window.setInterval(this.updateTimer, 500);
+		this.displayTime();
 	}
 
 	updateTimer(time = moment()) {
