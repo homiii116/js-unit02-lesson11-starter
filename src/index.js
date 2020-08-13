@@ -13,12 +13,11 @@ class App {
 	this.onWork = true;
 	this.startAt = null; //カウントダウン開始時の時間
 	this.endAt = null; //カウントダウン終了時の時間
-	this.getElements();
-	this.toggleEvents();
 	this.startTimer = this.startTimer.bind(this);
 	this.updateTimer = this.updateTimer.bind(this);
 	this.displayTime = this.displayTime.bind(this);
-
+	this.getElements();
+	this.toggleEvents();
 	this.displayTime();
 	}
 
@@ -35,7 +34,6 @@ class App {
 	startTimer(e = null, time = moment()) {
 		if (e)e.preventDefault();
 		this.startButton.disabled = true;
-		console.log(this.startButton.disabled);
 		this.stopButton.disabled = false;
 		this.isTimerStopped = false;
 		this.startAt = time;
@@ -46,6 +44,13 @@ class App {
 	}
 
 	updateTimer(time = moment()) {
+		const rest = this.endAt.diff(time); //残り時間を取得
+		if (rest <= 0) {
+			this.onWork = !this.onWork;
+			this.startAt = time;
+			this.endAt = this.onWork ? moment(time).add(this.workLength, 'minutes')
+			 : moment(time).add(this.breakLength, 'minutes');
+		}
 		this.displayTime(time);
 	}
 

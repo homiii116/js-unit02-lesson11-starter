@@ -48,3 +48,42 @@ describe('startTimer', () => {
 		expect(app.endAt.valueOf()).toEqual(now.add(25, 'minutes').valueOf());
 	})
 });
+
+describe('updateTimer', () => {
+	test('作業時間がおわったら休憩時間に切り替える。', () => {
+		document.body.innerHTML = template;
+		const app = new App();
+		const now = moment();
+		const startOfToday = now.startOf('day');
+		// 作業中の状態を作り出す
+		app.startButton.disabled = true;
+		app.stopButton.disabled = false;
+		app.isTimerStopped = false;
+		app.startAt = startOfToday;
+		app.endAt = moment(startOfToday).add(25, 'minutes');
+		// 終了時刻から100ミリ秒後の時間でテストを行う。
+		app.updateTimer(moment(startOfToday).add(25, 'minutes').add(100, 'millisecond'));
+		const timeDisplay = document.getElementById('time-display');
+		expect(timeDisplay.innerHTML).toEqual('5:00');
+		expect(app.onWork).not.toBeTruthy(); // 休憩時間に切り替わっている。
+	});
+	
+	test('休憩時間が終わったら作業時間に切り替える。', () => {
+		document.body.innerHTML = template;
+		const app = new App();
+		const now = moment();
+		const startOfToday = now.startOf('day');
+		// 休憩中の状態を作り出す。
+		app.onWork = false;
+		app.startButton.disabled = true;
+		app.stopButton.disabled = false;
+		app.isTimerStopped = false;
+		app.startAt = startOfToday;
+		app.endAt = moment(startOfToday).add(5, 'minutes');
+		// 終了時刻から100ミリ秒後の時間でテストを行う。
+		app.updateTimer(moment(startOfToday).add(5, 'minutes').add(100, 'millisecond'));
+		const timeDisplay = document.getElementById('time-display');
+		expect(timeDisplay.innerHTML).toEqual('25:00');
+		expect(app.onWork).toBeTruthy(); // 作用時間に切り替わっている。
+	})
+})
