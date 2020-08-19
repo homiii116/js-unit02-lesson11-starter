@@ -15,11 +15,14 @@ class App {
 	this.getHistory = App.getHistory.bind(this);
 	this.saveIntervalData = this.saveIntervalData.bind(this);
 	this.displayCyclesToday = this.displayCyclesToday.bind(this);
+	this.displayHistory = this.displayHistory.bind(this);
 	this.resetValues();
 	this.getElements();
 	this.toggleEvents();
 	this.displayTime();
 	this.displayCyclesToday();
+	this.displayHistory();
+	this.removeOldHistory();
 	}
 
 	getElements() {
@@ -28,6 +31,7 @@ class App {
 		this.stopButton = document.getElementById('stop-button');
 		this.countOfTodayDisplay = document.getElementById('count-today'); // 回数の表示
 		this.percentOfTodayDisplay = document.getElementById('percent-today'); // ％の表示
+		this.historyDisplay = document.getElementById('history');
 	}
 
 	toggleEvents() {
@@ -52,6 +56,8 @@ class App {
 		if (rest <= 0) {
 			if (this.onWork) {
 				this.saveIntervalData(time);  // 作業時からの切り替り時のみsaveIntervalを呼び出す。
+				this.displayCyclesToday();
+				this.displayHistory();
 			}
 			this.onWork = !this.onWork;
 			this.startAt = time;
@@ -59,7 +65,6 @@ class App {
 			 : moment(time).add(this.breakLength, 'minutes');
 		}
 		this.displayTime(time);
-		console.log(this.endAt);
 	}
 
 	stopTimer(e = null) {
@@ -126,6 +131,48 @@ class App {
 		const percent = count / 4 * 100;
 		this.countOfTodayDisplay.innerHTML = `${count.toString()}回 / 4回`;
 		this.percentOfTodayDisplay.innerHTML = `目標を${percent}%達成中です。`;
+	}
+
+	displayHistory(time = moment()) {
+		const collection = this.getHistory();
+		const startOfToday = time.startOf('day');
+		const startOfTodayClone = moment(startOfToday);
+		const sevenDaysAgo = startOfTodayClone.subtract(7, 'days');
+		const valOfSevenDaysAgo = sevenDaysAgo.valueOf();
+		const tableEl = document.createElement('table');
+		tableEl.classList.add('table', 'table-bordered');
+		const trElDate = document.createElement('tr');
+		const trElCount = document.createElement('tr');
+		for (let i = 0; i <= 6; i += 1) {
+			const filterItems = collection.filter((item) => {
+				const timestampOfItem = parseInt(item, 10);
+				return timestampOfItem >= valOfSevenDaysAgo + i * DAY 
+					&& timestampOfItem < valOfSevenDaysAgo + (i + 1) * DAY;
+			});
+			const count = filterItems.length;
+			const thElDate = document.createElement('th');
+			const tdElCount = document.createElement('td');
+			const sevenDaysAgoCloen = moment(sevenDaysAgo);
+			thElDate.innerHTML = sevenDaysAgoCloen.add(i, 'day').format('MM月DD日');
+			tdElCount.innerHTML = `${count}回<br>達成率${count / 4 * 100}%`;
+			trElDate.appendChild(thElDate);
+			trElCount.appendChild(tdElCount);
+		}
+		tableEl.appendChild(trElDate);
+		tableEl.appendChild(trElCount);
+		this.historyDisplay.appendChild(tableEl);
+	}
+
+	removeOldHistory() {
+		const now = moment();
+		const startOfToday = now.startOf('day');
+		const sevenDaysAgo = startOfToday.subtract(7, 'days');
+		const collection = this.getHistory();
+		const newCollection = collection.filter((item) => {
+			const timestampOfItem = parseInt(item, 10);
+			return timestampOfItem >= sevenDaysAgo;
+		});
+		localStorage.setItem('intervalData', JSON.stringify(newCollection));
 	}
 }
 

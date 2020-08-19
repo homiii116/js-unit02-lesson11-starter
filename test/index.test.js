@@ -60,7 +60,8 @@ describe('updateTimer', () => {
 		app.stopButton.disabled = false;
 		app.isTimerStopped = false;
 		app.startAt = startOfToday;
-		app.endAt = moment(startOfToday).add(25, 'minutes');
+		const endAt = moment(startOfToday).add(25, 'minutes');
+		app.endAt = endAt;
 		// 終了時刻から100ミリ秒後の時間でテストを行う。
 		app.updateTimer(moment(startOfToday).add(25, 'minutes').add(100, 'millisecond'));
 		const timeDisplay = document.getElementById('time-display');
@@ -152,4 +153,47 @@ describe('displayCyclesToday', () => {
 		expect(percentToday.innerHTML).toEqual('目標を50%達成中です。');
 		localStorage.clear();
 	})
+})
+
+describe('displayHistory', () => {
+	test('it should show the number of finished work sessions up to 7 days ago', () => {
+		document.body.innerHTML = template;
+		const startOfToday = moment().startOf('day');
+		const SevenDaysAgo = moment(startOfToday).subtract(7, 'days');
+		const val1 = moment(SevenDaysAgo).add(50, 'minutes').valueOf();
+		const val2 = moment(SevenDaysAgo).add(80, 'minutes').valueOf();
+		const val3 = moment(SevenDaysAgo).add(2, 'days').add('3', 'hours').valueOf();
+		const val4 = moment(SevenDaysAgo)
+			.add(3, 'days')
+			.add('2', 'hours')
+			.valueOf();
+		const collection = [val1, val2, val3, val4];
+		localStorage.setItem('intervalData', JSON.stringify(collection));
+		const app = new App();
+		const sevenDaysAgoTh = document.getElementsByTagName('th')[0];
+		const fiveDaysAgoTh = document.getElementsByTagName('th')[2];
+		const sevenDaysAgoTd = document.getElementsByTagName('td')[0];
+		const fiveDaysAgoTd = document.getElementsByTagName('td')[2];
+		expect(sevenDaysAgoTh.innerHTML).toEqual(SevenDaysAgo.format('MM月DD日'));
+		expect(fiveDaysAgoTh.innerHTML).toEqual(SevenDaysAgo.add(2, 'days').format('MM月DD日'));
+		expect(sevenDaysAgoTd.innerHTML).toEqual('2回<br>達成率50%');
+		expect(fiveDaysAgoTd.innerHTML).toEqual('1回<br>達成率25%');
+		expect(app.getHistory().length).toEqual(4);
+	})
+
+	describe('removeOldHistory', () => {
+		test('古いデータ削除する。', () => {
+			const startOfToday = moment().startOf('day');
+			const val1 = moment(startOfToday).subtract(8, 'days').add(30, 'minutes').valueOf();
+			const val2 = moment(startOfToday).subtract(5, 'days').add(60, 'minutes').valueOf();
+			const collection = [val1, val2];
+			document.body.innerHTML = template;
+			const app = new App();
+			localStorage.setItem('intervalData', JSON.stringify(collection));
+			app.removeOldHistory();
+			expect(App.getHistory()).not.toContain(val1);
+			expect(App.getHistory()).toContain(val2);
+			localStorage.clear();
+		});
+	});
 })
